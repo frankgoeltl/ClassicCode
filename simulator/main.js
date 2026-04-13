@@ -55,21 +55,18 @@ function plunge() {
 function tilt() { handleSwitch(SW_TILT); }
 
 function toggleRulesMode() {
-  const modes = ['original','classic','new'];
-  const labels = {
-    original: 'Original (1980 Bally)',
-    classic:  'Classic (SBM23)',
-    new:      'New (Spinner Jackpot)',
-  };
-  const colors = { original:'#224422', classic:'#444', new:'#884400' };
-  const borders = { original:'#44aa44', classic:'#666', new:'#cc6600' };
-  const idx = (modes.indexOf(G.rulesMode) + 1) % 3;
-  G.rulesMode = modes[idx];
+  G.rulesMode = G.rulesMode === 'classic' ? 'original' : 'classic';
   const btn = document.getElementById('btn-rules');
-  btn.textContent = labels[G.rulesMode];
-  btn.style.background = colors[G.rulesMode];
-  btn.style.borderColor = borders[G.rulesMode];
-  addLog('Rules: ' + labels[G.rulesMode], 'mode');
+  if (G.rulesMode === 'classic') {
+    btn.textContent = 'SBM23 (Custom Rules)';
+    btn.style.background = '#444';
+    btn.style.borderColor = '#666';
+  } else {
+    btn.textContent = 'Original (1980 Bally)';
+    btn.style.background = '#224422';
+    btn.style.borderColor = '#44aa44';
+  }
+  addLog('Rules: ' + btn.textContent, 'mode');
 }
 window.toggleRulesMode = toggleRulesMode;
 

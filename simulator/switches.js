@@ -281,17 +281,13 @@ function handleSwitchSBM23(sw) {
       if (G.totalSpins > 20 && G.spinner1kPhase===0) G.spinner1kPhase = 1;
       if (advanceAlternatingCombo(sw)) {
         G.scores[p] += m*1500; playSound('spinner_high');
-        if (G.rulesMode==='new' && G.spinnerAccumulated<253) G.spinnerAccumulated += 3;
         addLog('Combo spinner +1.5K','score');
       } else if (G.spinner1kPhase===1 && sw===SW_LEFT_SPINNER) {
         G.scores[p] += m*1000; playSound('spinner_high');
-        if (G.rulesMode==='new' && G.spinnerAccumulated<254) G.spinnerAccumulated += 2;
       } else if (G.spinner1kPhase===2 && sw===SW_RIGHT_SPINNER) {
         G.scores[p] += m*1000; playSound('spinner_high');
-        if (G.rulesMode==='new' && G.spinnerAccumulated<254) G.spinnerAccumulated += 2;
       } else {
         G.scores[p] += m*100; playSound('spinner_low');
-        if (G.rulesMode==='new' && G.spinnerAccumulated<255) G.spinnerAccumulated += 1;
       }
       break;
 
@@ -320,11 +316,6 @@ function handleSwitchSBM23(sw) {
         if (advanceAlternatingCombo(sw)) {
           score = m*15000; playSound('collect'); addLog('Combo collect +15K','score');
         } else { score = m*5000; playSound('horseshoe'); addLog('Horseshoe +5K','score'); }
-        if (G.rulesMode==='new' && G.spinnerAccumulated > 0) {
-          score += m * G.spinnerAccumulated * 1000;
-          addLog('Spinner Jackpot +' + G.spinnerAccumulated + 'K!', 'score');
-          G.spinnerAccumulated = 0;
-        }
       }
       startScoreAnim(score);
       setKicker(true);

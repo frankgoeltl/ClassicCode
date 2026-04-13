@@ -289,7 +289,6 @@ byte AlternatingCombosHit;
 byte Spinner1kPhase;
 byte SilverballBonusShot;
 byte SilverballHeadProgress;
-byte SpinnerAccumulatedValue;
 
 boolean SuperSkillshotQualified;
 
@@ -524,14 +523,8 @@ void ShowSpinnerLamps() {
   } else {
     boolean leftAlternatingCombo = (AlternatingComboPhase < 10 && AlternatingComboPhase % 2);
     boolean rightAlternatingCombo = (AlternatingComboPhase && AlternatingComboPhase < 10 && ((AlternatingComboPhase % 2) == 0));
-    if (!leftAlternatingCombo && !rightAlternatingCombo && Spinner1kPhase == 0 && SpinnerAccumulatedValue >= 10) {
-      int flashPeriod = (SpinnerAccumulatedValue >= 25) ? 125 : 250;
-      RPU_SetLampState(LAMP_LEFT_SPINNER_1000_WHEN_LIT, 1, 0, flashPeriod);
-      RPU_SetLampState(LAMP_RIGHT_SPINNER_1000_WHEN_LIT, 1, 0, flashPeriod);
-    } else {
-      RPU_SetLampState(LAMP_LEFT_SPINNER_1000_WHEN_LIT, (Spinner1kPhase == 1) || leftAlternatingCombo, 0, leftAlternatingCombo ? 100 : 0);
-      RPU_SetLampState(LAMP_RIGHT_SPINNER_1000_WHEN_LIT, (Spinner1kPhase == 2) || rightAlternatingCombo, 0, rightAlternatingCombo ? 100 : 0);
-    }
+    RPU_SetLampState(LAMP_LEFT_SPINNER_1000_WHEN_LIT, (Spinner1kPhase == 1) || leftAlternatingCombo, 0, leftAlternatingCombo ? 100 : 0);
+    RPU_SetLampState(LAMP_RIGHT_SPINNER_1000_WHEN_LIT, (Spinner1kPhase == 2) || rightAlternatingCombo, 0, rightAlternatingCombo ? 100 : 0);
   }
 }
 
@@ -2343,7 +2336,6 @@ int InitNewBall(bool curStateChanged, byte playerNum, int ballNum) {
     SilverballBonusShotTimeout = 0;
     SilverballHeadProgressChanged = 0;
     TotalSpins = 0;
-    SpinnerAccumulatedValue = 0;
     KickerStatus = 0;
     ExtraBallHurryUp = 0;
     AwardLightAnimationEnd = 0;
@@ -2973,19 +2965,15 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
           if (AdvanceAlternatingCombo(switchHit)) {
             CurrentScores[CurrentPlayer] += ScoreMultiplier * 1500;
             PlaySoundEffect(SOUND_EFFECT_SPINNER_HIGH);
-            if (SpinnerAccumulatedValue < 253) SpinnerAccumulatedValue += 3;
           } else if (Spinner1kPhase == 1 && switchHit == SW_LEFT_SPINNER) {
             CurrentScores[CurrentPlayer] += ScoreMultiplier * 1000;
             PlaySoundEffect(SOUND_EFFECT_SPINNER_HIGH);
-            if (SpinnerAccumulatedValue < 254) SpinnerAccumulatedValue += 2;
           } else if (Spinner1kPhase == 2 && switchHit == SW_RIGHT_SPINNER) {
             CurrentScores[CurrentPlayer] += ScoreMultiplier * 1000;
             PlaySoundEffect(SOUND_EFFECT_SPINNER_HIGH);
-            if (SpinnerAccumulatedValue < 254) SpinnerAccumulatedValue += 2;
           } else {
             CurrentScores[CurrentPlayer] += ScoreMultiplier * 100;
             PlaySoundEffect(SOUND_EFFECT_SPINNER_LOW);
-            if (SpinnerAccumulatedValue < 255) SpinnerAccumulatedValue += 1;
           }
           break;
         case SW_KICKER_ROLLOVER:
@@ -3008,26 +2996,18 @@ int RunGamePlayMode(int curState, boolean curStateChanged) {
           if (BallFirstSwitchHitTime == 0) BallFirstSwitchHitTime = CurrentTime;
           break;
         case SW_HOOP_ROLLOVER_BUTTON:
-          {
-            unsigned long horseshoeScore = 0;
-            if (GameMode == GAME_MODE_SKILL_SHOT) {
-              horseshoeScore = ScoreMultiplier * 20000;
-              PlaySoundEffect(SOUND_EFFECT_SKILL_SHOT);
-              SuperSkillshotQualified = true;
+          if (GameMode == GAME_MODE_SKILL_SHOT) {
+            StartScoreAnimation(ScoreMultiplier * 20000);
+            PlaySoundEffect(SOUND_EFFECT_SKILL_SHOT);
+            SuperSkillshotQualified = true;
+          } else {
+            if (AdvanceAlternatingCombo(switchHit)) {
+              StartScoreAnimation(ScoreMultiplier * 15000);
+              PlaySoundEffect(SOUND_EFFECT_ADDED_BONUS_QUALIFIED);
             } else {
-              if (AdvanceAlternatingCombo(switchHit)) {
-                horseshoeScore = ScoreMultiplier * 15000;
-                PlaySoundEffect(SOUND_EFFECT_ADDED_BONUS_QUALIFIED);
-              } else {
-                horseshoeScore = ScoreMultiplier * 5000;
-                PlaySoundEffect(SOUND_EFFECT_HORSESHOE);
-              }
-              if (SpinnerAccumulatedValue > 0) {
-                horseshoeScore += ScoreMultiplier * ((unsigned long)SpinnerAccumulatedValue) * 1000;
-                SpinnerAccumulatedValue = 0;
-              }
+              StartScoreAnimation(ScoreMultiplier * 5000);
+              PlaySoundEffect(SOUND_EFFECT_HORSESHOE);
             }
-            StartScoreAnimation(horseshoeScore);
           }
           SetKickerStatus(true);
           LastHorseshoe = CurrentTime;

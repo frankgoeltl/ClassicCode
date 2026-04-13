@@ -45,7 +45,6 @@ function updateStatus() {
     for (let i=0;i<15;i++) if ((G.silverballStatus[p][i]&0x0F) >= G.silverballMode[p]) litCount++;
   }
   el('st-letters').textContent = litCount + '/15';
-  el('st-spinjp').textContent = G.spinnerAccumulated + 'K';
 
   let comboText = '--';
   if (G.altComboPhase === 10) comboText = 'COLLECT!';

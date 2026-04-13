@@ -71,14 +71,8 @@ function updateAllLamps() {
   // Spinner lamps
   const leftCombo = G.altComboPhase < 10 && G.altComboPhase % 2;
   const rightCombo = G.altComboPhase && G.altComboPhase < 10 && !(G.altComboPhase % 2);
-  if (G.rulesMode==='new' && !leftCombo && !rightCombo && G.spinner1kPhase===0 && G.spinnerAccumulated>=10) {
-    const fp = G.spinnerAccumulated >= 25 ? 125 : 250;
-    setLamp('lspin', true, 0, fp);
-    setLamp('rspin', true, 0, fp);
-  } else {
-    setLamp('lspin', G.spinner1kPhase===1 || leftCombo, 0, leftCombo?100:0);
-    setLamp('rspin', G.spinner1kPhase===2 || rightCombo, 0, rightCombo?100:0);
-  }
+  setLamp('lspin', G.spinner1kPhase===1 || leftCombo, 0, leftCombo?100:0);
+  setLamp('rspin', G.spinner1kPhase===2 || rightCombo, 0, rightCombo?100:0);
 
   // Toplane lamps
   // toplanePhase 0 = center lit, 1 = outer lit (toggled by bumpers/slings)

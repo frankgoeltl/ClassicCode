@@ -1,6 +1,6 @@
 # Silverball Mania - Complete Rulesheet
 
-Three rules modes are available in the simulator. Toggle with the Rules button.
+Two rules modes are available in the simulator. Toggle with the Rules button.
 
 ---
 
@@ -149,32 +149,6 @@ Time window: 10s at 1X, 8s at 2X, 6s at 3X, 4s at 4X, 2s at 5X.
 ### Super Skill Shot
 
 At ball start, hitting the horseshoe (20K) qualifies the super skill shot. Then hitting N center target awards an additional 15,000 and advances base bonus X (carries across balls).
-
----
-
-## New (Spinner Jackpot)
-
-All Classic (SBM23) rules plus the Spinner Jackpot feature.
-
-### Spinner Jackpot
-
-Spinner hits accumulate a pot that can be collected at the horseshoe:
-
-| Spin Type | Accumulation |
-|-----------|-------------|
-| Base spin (100pt) | +1K to pot |
-| Lit spinner (1K phase) | +2K to pot |
-| Combo advance (1.5K) | +3K to pot |
-
-- Pot resets each ball
-- Collected by hitting the horseshoe (added to horseshoe score)
-- Not collected during skill shot
-- Maximum pot: 255K
-- Spinner lamps flash when pot reaches 10K+ (slow at 10K, fast at 25K+), only when no other spinner state is active
-
-### Example
-
-After 30 base spins: pot = 30K. Hit horseshoe: score 5K (horseshoe) + 30K (spinner jackpot) = 35K total. Pot resets to 0.
 
 ---
 
