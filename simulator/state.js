@@ -100,8 +100,8 @@ const G = {
   // Lamp states: map of lampId -> {on, dim, flash}
   lamps: {},
 
-  // Rules mode: 'original' = 1980 Bally, 'classic' = SBM23 custom rules
-  rulesMode: 'classic',
+  // Rules mode: 'original' = 1980 Bally, 'classic' = SBM23, 'frg' = Original + spinner jackpot
+  rulesMode: 'frg',
 
   // Log
   log: [],

@@ -6,18 +6,30 @@ function formatScore(score) {
 }
 
 function updateDisplays() {
+  const jackpotDisplay = (G.rulesMode === 'frg' && G.machineState === MS_NORMAL_GAMEPLAY && G.spinnerAccumulated > 0)
+    ? (2 + G.currentPlayer) % 4 : -1;
+
   for (let i = 0; i < 4; i++) {
     const el = document.getElementById('disp-p' + (i+1));
-    if (i < G.currentNumPlayers) {
+    if (i === jackpotDisplay) {
+      // Show spinner jackpot value (units of 1K)
+      el.textContent = G.spinnerAccumulated;
+      el.className = 'display-score';
+      el.style.color = '#E8368F';
+    } else if (i < G.currentNumPlayers) {
       el.textContent = formatScore(G.scores[i]);
       el.className = 'display-score' + (i === G.currentPlayer && G.machineState > 0 ? ' active' : '');
+      el.style.color = '';
     } else {
       el.textContent = '';
       el.className = 'display-score';
+      el.style.color = '';
     }
   }
-  document.getElementById('disp-credits').textContent = G.credits;
-  document.getElementById('disp-bip').textContent = G.currentBallInPlay || '';
+  const creditsEl = document.getElementById('disp-credits');
+  const bipEl = document.getElementById('disp-bip');
+  if (creditsEl) creditsEl.textContent = G.credits;
+  if (bipEl) bipEl.textContent = G.currentBallInPlay || '';
 }
 
 function updateStatus() {
@@ -36,13 +48,13 @@ function updateStatus() {
 
   const el = id => document.getElementById(id);
   const row = id => el(id)?.parentElement;
-  const orig = G.rulesMode === 'original';
+  const isOrigBased = G.rulesMode === 'original' || G.rulesMode === 'frg';
 
   el('st-mode').textContent = mode;
   el('st-bonusx').textContent = G.bonusX[p] + 'X';
 
-  // Original: show completions instead of bonus/silverball mode
-  if (orig) {
+  // Original/FRG: show completions, hide SBM23-only fields
+  if (isOrigBased) {
     el('st-bonus-label').textContent = 'SBM Completions:';
     el('st-bonus').textContent = (G.silverballMode[p] - 1);
     row('st-sbmode').style.display = 'none';
@@ -69,10 +81,18 @@ function updateStatus() {
 
   let litCount = 0;
   if (G.silverballStatus) {
-    const lvl = orig ? G.silverballMode[p] : G.silverballMode[p];
+    const lvl = G.silverballMode[p];
     for (let i=0;i<15;i++) if ((G.silverballStatus[p][i]&0x0F) >= lvl) litCount++;
   }
   el('st-letters').textContent = litCount + '/15';
+
+  // Spinner jackpot (new mode only)
+  if (G.rulesMode === 'frg') {
+    row('st-spinjp').style.display = '';
+    el('st-spinjp').textContent = G.spinnerAccumulated > 0 ? G.spinnerAccumulated + 'K (Display ' + ((2+G.currentPlayer)%4+1) + ')' : '--';
+  } else {
+    row('st-spinjp').style.display = 'none';
+  }
 
   el('st-kicker').textContent = G.kickerStatus ? 'ON' : 'OFF';
   el('st-tilt').textContent = G.numTiltWarnings + '/' + G.maxTiltWarnings;

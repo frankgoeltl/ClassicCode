@@ -36,14 +36,14 @@ function initGameplay() {
 
 function initNewBall() {
   const p = G.currentPlayer;
-  G.gameMode = G.rulesMode === 'original' ? GM_UNSTRUCTURED_PLAY : GM_SKILL_SHOT;
+  G.gameMode = G.rulesMode === 'classic' ? GM_SKILL_SHOT : GM_UNSTRUCTURED_PLAY;
   G.ballFirstSwitch = 0;
   G.ballSaveUsed = false;
   G.extraBallCollected = false;
   G.bonus[p] = 0;
   G.currentBonus = 0;
-  // Original: multipliers reset per ball. Classic/New: carry via baseBonusX
-  G.bonusX[p] = G.rulesMode === 'original' ? 1 : G.baseBonusX[p];
+  // Classic: carry via baseBonusX. Original/FRG: reset per ball
+  G.bonusX[p] = G.rulesMode === 'classic' ? G.baseBonusX[p] : 1;
   G.scoreMultiplier = 1;
   G.kickerTimeout = 0; G.kickerRolloverWatch = 0; G.kickerStatus = 0;
   G.lastHorseshoe = 0;
@@ -77,8 +77,8 @@ function manageGameMode() {
   for (let i=0;i<15;i++) {
     if (G.silverballHighlightEnd[i] && t > G.silverballHighlightEnd[i]) G.silverballHighlightEnd[i]=0;
   }
-  // Original: kicker has no timeout, stays up until ball hits it
-  if (G.rulesMode !== 'original' && G.kickerTimeout && t > G.kickerTimeout) { setKicker(false); }
+  // Original/FRG: kicker has no timeout. Classic: timed.
+  if (G.rulesMode === 'classic' && G.kickerTimeout && t > G.kickerTimeout) { setKicker(false); }
   if (G.kickerRolloverWatch && t > G.kickerRolloverWatch) {
     setKicker(false); G.kickerRolloverWatch = 0;
     playSound('kicker');

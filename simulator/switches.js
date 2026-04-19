@@ -6,13 +6,13 @@ function handleSwitch(sw) {
   }
   if (G.machineState !== MS_NORMAL_GAMEPLAY) return;
 
-  // Original mode: simple flat scoring
-  if (G.rulesMode === 'original') {
+  // Original and New modes use 1980 Bally rules
+  if (G.rulesMode === 'original' || G.rulesMode === 'frg') {
     handleSwitchOriginal(sw);
     return;
   }
 
-  // Classic + New modes (SBM23 rules)
+  // Classic mode (SBM23 rules)
   handleSwitchSBM23(sw);
 }
 
@@ -81,6 +81,7 @@ function handleSwitchOriginal(sw) {
         // Center lane used — toggle to outer lanes
         G.toplanePhase = 1;
       }
+      if (G.rulesMode==='frg') G.toplaneProgress |= 0x02;
       playSound('rollover');
       addLog('Center lane +5K, kicker lit','score');
       if (!G.ballFirstSwitch) G.ballFirstSwitch = G.currentTime;
@@ -89,6 +90,7 @@ function handleSwitchOriginal(sw) {
     case SW_TOP_LEFT: case SW_TOP_RIGHT:
       G.scores[p] += 500;
       if (G.toplanePhase === 1) { spotNextLetter(); } // outer lit = spot letter
+      if (G.rulesMode==='frg') G.toplaneProgress |= (sw===SW_TOP_LEFT ? 0x01 : 0x04);
       playSound('rollover');
       addLog('Outer lane +500','score');
       if (!G.ballFirstSwitch) G.ballFirstSwitch = G.currentTime;
@@ -104,13 +106,14 @@ function handleSwitchOriginal(sw) {
       addLog('50pt rebound (lanes toggled)','score');
       break;
 
-    // --- THUMPER BUMPERS (100pt) ---
-    case SW_LEFT_BUMPER: case SW_RIGHT_BUMPER: case SW_CENTER_BUMPER:
-      G.scores[p] += 100;
+    // --- THUMPER BUMPERS (100pt, 1K in FRG when SILVER complete) ---
+    case SW_LEFT_BUMPER: case SW_RIGHT_BUMPER: case SW_CENTER_BUMPER: {
+      const silverComplete = G.rulesMode==='frg' && (function(){ for(let i=0;i<6;i++) if(!isLetterLit(i)) return false; return true; })();
+      G.scores[p] += silverComplete ? 1000 : 100;
       playSound('bumper');
-      addLog('Bumper +100','score');
+      addLog('Bumper ' + (silverComplete ? '+1K' : '+100'),'score');
       if (!G.ballFirstSwitch) G.ballFirstSwitch = G.currentTime;
-      break;
+      break; }
 
     // --- SLINGSHOTS (20pt, toggle lanes/spinners) ---
     case SW_LEFT_SLING: case SW_RIGHT_SLING:
@@ -130,16 +133,49 @@ function handleSwitchOriginal(sw) {
       G.scores[p] += spinnerLit ? 1000 : 100;
       playSound(spinnerLit ? 'spinner_high' : 'spinner_low');
       addLog('Spinner ' + (spinnerLit ? '(lit) +1K' : '+100'),'score');
+      // FRG mode: accumulate spinner jackpot
+      if (G.rulesMode==='frg') {
+        if (spinnerLit && G.spinnerAccumulated<251) G.spinnerAccumulated += 5;
+        else if (!spinnerLit && G.spinnerAccumulated<255) G.spinnerAccumulated += 1;
+      }
       break; }
 
     // --- CENTER HOOP (5K, spots letter, advances bonus X, lights kicker) ---
-    case SW_HOOP_ROLLOVER:
-      G.scores[p] += 5000;
-      spotNextLetter();
-      increaseBonusX();  // horseshoe directly advances bonus X in original
+    case SW_HOOP_ROLLOVER: {
+      let hoopScore = 5000;
+      if (G.rulesMode==='frg') {
+        // FRG: horseshoe spots MANIA letters only; bonus X after MANIA complete
+        let spotted = false;
+        for (let i=10;i<15;i++) {
+          if (!isLetterLit(i)) {
+            G.silverballStatus[p][i] = (G.silverballStatus[p][i]&0xF0)|curLevel;
+            G.silverballHighlightEnd[i] = G.currentTime+5000;
+            playSound('letter');
+            addLog('Spotted '+LETTER_NAMES[i],'event');
+            checkManiaSpinners();
+            origCheckSBMComplete();
+            spotted = true;
+            break;
+          }
+        }
+        if (!spotted) increaseBonusX();
+        // Collect spinner jackpot
+        if (G.spinnerAccumulated > 0) {
+          hoopScore += G.spinnerAccumulated * 1000;
+          addLog('Horseshoe +5K + Spinner Jackpot +' + G.spinnerAccumulated + 'K!','score');
+          G.spinnerAccumulated = 0;
+        } else {
+          addLog('Horseshoe +5K' + (spotted ? ', spot MANIA letter' : ', bonus X up') + ', kicker lit','score');
+        }
+      } else {
+        // Original: spots any letter, always advances bonus X
+        spotNextLetter();
+        increaseBonusX();
+        addLog('Horseshoe +5K, spot letter, bonus X up, kicker lit','score');
+      }
       setKicker(true);
+      G.scores[p] += hoopScore;
       playSound('horseshoe');
-      addLog('Horseshoe +5K, spot letter, bonus X up, kicker lit','score');
       // Extra ball: lit at N target after bonus X reaches 5X (5th horseshoe hit)
       // In original mode, EB stays lit permanently (no timeout)
       if (G.bonusX[p] >= 5 && !G.extraBallCollected && !G.extraBallHurryUp) {
@@ -147,7 +183,7 @@ function handleSwitchOriginal(sw) {
         addLog('Extra Ball lit at N target!','mode');
       }
       if (!G.ballFirstSwitch) G.ballFirstSwitch = G.currentTime;
-      break;
+      break; }
 
     // --- KICKER (5K lit, 500 unlit) ---
     case SW_KICKER_ROLLOVER:
@@ -405,7 +441,7 @@ function setKicker(on, duration) {
   if (on && !G.kickerStatus) {
     G.kickerStatus = 1;
     // Original: kicker stays up until ball hits it (no timeout)
-    G.kickerTimeout = G.rulesMode === 'original' ? 0 : G.currentTime + duration;
+    G.kickerTimeout = G.rulesMode === 'classic' ? G.currentTime + duration : 0;
     playSound('kicker');
   } else if (!on) { G.kickerStatus = 0; G.kickerTimeout = 0; }
 }
@@ -413,7 +449,7 @@ function setKicker(on, duration) {
 function handleDrain() {
   if (!G.ballFirstSwitch) { addLog('Ball returned to plunger'); return; }
   const ballSaveEnd = G.ballFirstSwitch + (G.ballSaveSeconds-1)*1000;
-  if (G.rulesMode !== 'original' && G.ballSaveSeconds && !G.ballSaveUsed && G.currentTime < ballSaveEnd) {
+  if (G.rulesMode === 'classic' && G.ballSaveSeconds && !G.ballSaveUsed && G.currentTime < ballSaveEnd) {
     G.ballSaveUsed = true;
     G.ballFirstSwitch = 0;
     addLog('Ball saved!', 'event');

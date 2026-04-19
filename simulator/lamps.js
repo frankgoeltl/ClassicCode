@@ -72,8 +72,14 @@ function updateAllLamps() {
   // Spinner lamps
   const leftCombo = G.altComboPhase < 10 && G.altComboPhase % 2;
   const rightCombo = G.altComboPhase && G.altComboPhase < 10 && !(G.altComboPhase % 2);
-  setLamp('lspin', G.spinner1kPhase===1 || leftCombo, 0, leftCombo?100:0);
-  setLamp('rspin', G.spinner1kPhase===2 || rightCombo, 0, rightCombo?100:0);
+  if (G.rulesMode==='frg' && !leftCombo && !rightCombo && G.spinner1kPhase===0 && G.spinnerAccumulated>=10) {
+    const fp = G.spinnerAccumulated >= 25 ? 125 : 250;
+    setLamp('lspin', true, 0, fp);
+    setLamp('rspin', true, 0, fp);
+  } else {
+    setLamp('lspin', G.spinner1kPhase===1 || leftCombo, 0, leftCombo?100:0);
+    setLamp('rspin', G.spinner1kPhase===2 || rightCombo, 0, rightCombo?100:0);
+  }
 
   // Toplane lamps
   // toplanePhase 0 = center lit, 1 = outer lit (toggled by bumpers/slings)
@@ -87,13 +93,18 @@ function updateAllLamps() {
 
   // Kicker lamp
   if (G.kickerStatus) {
-    const remaining = G.kickerTimeout - t;
-    setLamp('kicker', true, 0, remaining<5000?125:500);
+    if (G.kickerTimeout) {
+      const remaining = G.kickerTimeout - t;
+      setLamp('kicker', true, 0, remaining<5000?125:500);
+    } else {
+      // Original/FRG: no timeout, solid on
+      setLamp('kicker', true, 0, 0);
+    }
   } else { setLamp('kicker', false); }
 
-  // Shoot again (no ball save in original mode)
+  // Shoot again (ball save is SBM23/classic only)
   if (G.samePlayerShootsAgain) setLamp('again', true, 0, 0);
-  else if (G.rulesMode !== 'original' && G.ballFirstSwitch && G.ballSaveSeconds && !G.ballSaveUsed) {
+  else if (G.rulesMode === 'classic' && G.ballFirstSwitch && G.ballSaveSeconds && !G.ballSaveUsed) {
     const remaining = (G.ballFirstSwitch + (G.ballSaveSeconds-1)*1000) - t;
     if (remaining > 0) setLamp('again', true, 0, remaining<1000?100:500);
     else setLamp('again', false);
@@ -116,13 +127,13 @@ function updateSilverballLamps() {
   }
   // Head lamps (backglass SILVERBALL, first 10 letters only)
   for (let i=0; i<10; i++) {
-    if (G.rulesMode === 'original') {
-      // Original: head lamps reflect current letter collection (low nibble)
-      setLamp('head-'+i, (G.silverballStatus[p][i] & 0x0F) >= G.silverballMode[p], 0, 0);
-    } else {
+    if (G.rulesMode === 'classic') {
       // SBM23: head lamps use high nibble (carry-over progress)
       const headLevel = (G.silverballStatus[p][i] & 0xF0) >> 4;
       setLamp('head-'+i, headLevel > 0, 0, 0);
+    } else {
+      // Original/FRG: head lamps reflect current letter collection (low nibble)
+      setLamp('head-'+i, (G.silverballStatus[p][i] & 0x0F) >= G.silverballMode[p], 0, 0);
     }
   }
 }
