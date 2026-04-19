@@ -129,18 +129,21 @@ function handleSwitchOriginal(sw) {
       if (!G.ballFirstSwitch) G.ballFirstSwitch = G.currentTime;
       break;
 
-    // --- SPINNERS (1K lit, 100 unlit) ---
+    // --- SPINNERS (1K lit, 100 unlit; FRG also adds to the jackpot pot) ---
     case SW_LEFT_SPINNER: case SW_RIGHT_SPINNER: {
       const spinnerLit = maniaComplete() && (
         (G.spinner1kPhase===1 && sw===SW_LEFT_SPINNER) ||
         (G.spinner1kPhase===2 && sw===SW_RIGHT_SPINNER));
       G.scores[p] += spinnerLit ? 1000 : 100;
       playSound(spinnerLit ? 'spinner_high' : 'spinner_low');
-      addLog('Spinner ' + (spinnerLit ? '(lit) +1K' : '+100'),'score');
-      // FRG mode: accumulate spinner jackpot
       if (G.rulesMode==='frg') {
+        // FRG: accumulate spinner jackpot and surface it in the log
+        const potAdd = spinnerLit ? 5 : 1;
         if (spinnerLit && G.spinnerAccumulated<251) G.spinnerAccumulated += 5;
         else if (!spinnerLit && G.spinnerAccumulated<255) G.spinnerAccumulated += 1;
+        addLog('Spinner ' + (spinnerLit ? '(lit) +1K' : '+100') + ' / Jackpot +' + potAdd + 'K', 'score');
+      } else {
+        addLog('Spinner ' + (spinnerLit ? '(lit) +1K' : '+100'), 'score');
       }
       break; }
 
