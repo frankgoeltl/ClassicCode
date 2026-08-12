@@ -1,0 +1,37 @@
+{
+  "format_version": 1,
+  "generated_at": "2026-08-12T13:27:22Z",
+  "description": "Custom game code for a 1980 Bally Silverball Mania pinball machine, running on an Arduino MEGA 2560 PRO connected to the original MPU board via the RPU (Retro Pin Upgrade) framework. Includes a browser-based simulator (ClassicCode) for testing the Original and SBM23 rulesets without hardware.",
+  "tech_stack": [
+    { "category": "language", "label": "C++", "detail": "Arduino sketch (SBM23.ino)", "priority": 1 },
+    { "category": "framework", "label": "RPU OS", "detail": "v5.4, Retro Pin Upgrade by Dick Hamill", "priority": 2 },
+    { "category": "other", "label": "Arduino MEGA 2560 PRO", "detail": "target hardware, fqbn arduino:avr:mega", "priority": 3 },
+    { "category": "ui", "label": "Vanilla JS simulator", "detail": "static browser app in simulator/, no build step", "priority": 4 },
+    { "category": "deploy", "label": "GitHub Pages", "detail": "hosts the simulator site", "priority": 5 }
+  ],
+  "local": {
+    "dev_port": null,
+    "dev_command": "open simulator/index.html",
+    "default_url": null
+  },
+  "production": {
+    "url": "https://frankgoeltl.github.io/SBM23/",
+    "deploy_target": "GitHub Pages",
+    "status_url": null
+  },
+  "commands": {
+    "build": "arduino-cli compile --fqbn arduino:avr:mega SBM23.ino"
+  },
+  "runtime": { "name": "Arduino AVR (ATmega2560)", "version": null },
+  "license": "GPL-3.0-or-later",
+  "ci": null,
+  "git": {
+    "default_branch": "main",
+    "remote_url": "https://github.com/frankgoeltl/SBM23.git"
+  },
+  "links": [
+    { "label": "GitHub", "url": "https://github.com/frankgoeltl/SBM23" },
+    { "label": "Pinball Refresh (RPU)", "url": "https://www.pinballrefresh.com/retro-pin-upgrade-rpu" },
+    { "label": "RPU on GitHub", "url": "https://github.com/RetroPinUpgrade" }
+  ]
+}
